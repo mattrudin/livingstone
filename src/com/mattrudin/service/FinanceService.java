@@ -15,6 +15,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -83,22 +86,44 @@ public class FinanceService implements IFinanceService {
     }
 
     @Override
-    public List<Asset> getPrice(String symbolName, final Date from, final Date until) {
+    public List<Asset> getPrice(String symbolName, final LocalDate from, final LocalDate until) {
+        Objects.requireNonNull(symbolName);
+        Objects.requireNonNull(from);
+        Objects.requireNonNull(until);
         return query(symbolName, from, until);
     }
 
     @Override
-    public Map<String, List<Asset>> getPrices(List<String> symbolNames, final Date from, final Date until) {
+    public List<Asset> getPrice(String symbolName, LocalDate from) {
+        Objects.requireNonNull(symbolName);
+        Objects.requireNonNull(from);
+        return query(symbolName, from, LocalDate.now());
+    }
+
+    @Override
+    public Map<String, List<Asset>> getPrices(List<String> symbolNames, final LocalDate from, final LocalDate until) {
+        Objects.requireNonNull(symbolNames);
+        Objects.requireNonNull(from);
+        Objects.requireNonNull(until);
         final Map<String, List<Asset>> symbolPrices = new HashMap<>();
         for (String symbolName : symbolNames) {
-            final List<Asset> symbolPrice = query(symbolName, from, until);
-            symbolPrices.put(symbolName, symbolPrice);
+            if (symbolName != null) {
+                final List<Asset> symbolPrice = query(symbolName, from, until);
+                symbolPrices.put(symbolName, symbolPrice);
+            }
         }
         return symbolPrices;
     }
 
-    private List<Asset> query(final String symbolName, final Date from, final Date until) {
-        final String query = String.format(QUERY_URI, symbolName, getTimeFrame(from, until), getCurrentTime(), httpCrumb);
+    @Override
+    public Map<String, List<Asset>> getPrices(List<String> symbolNames, LocalDate from) {
+        Objects.requireNonNull(symbolNames);
+        Objects.requireNonNull(from);
+        return getPrices(symbolNames, from, LocalDate.now());
+    }
+
+    private List<Asset> query(final String symbolName, final LocalDate from, final LocalDate until) {
+        final String query = String.format(QUERY_URI, symbolName, getSeconds(from), getSeconds(until), httpCrumb);
         final HttpGet httpGet = new HttpGet(query);
         final List<Asset> symbolPrices = new ArrayList<>();
         HttpResponse httpResponse = null;
@@ -125,15 +150,8 @@ public class FinanceService implements IFinanceService {
         return symbolPrices;
     }
 
-    private long getTimeFrame(final Date from, final Date until) {
-        // TODO Do stuff with from and until
-        final Calendar time = Calendar.getInstance();
-        final int lastYear = Calendar.getInstance().get(Calendar.YEAR) - 1;
-        time.set(Calendar.YEAR, lastYear);
-        return time.getTimeInMillis() / 1000L;
-    }
-
-    private long getCurrentTime() {
-        return System.currentTimeMillis();
+    private long getSeconds(final LocalDate date) {
+        final LocalDateTime dateTime = date.atStartOfDay();
+        return dateTime.toEpochSecond(ZoneOffset.UTC);
     }
 }
