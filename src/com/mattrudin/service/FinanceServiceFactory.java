@@ -20,6 +20,7 @@ public class FinanceServiceFactory {
     private static final HttpClientContext clientContext = HttpClientContext.create();
     private static final String CRUMB_STORE = "CrumbStore";
     private static final String QUOTE_URI = "https://finance.yahoo.com/quote/%s/?p=%s";
+    private static final String SYMBOL = "SPY";
     private static final HttpClient httpClient = HttpClientBuilder.create().build();
 
     private FinanceServiceFactory() {
@@ -27,28 +28,26 @@ public class FinanceServiceFactory {
     }
 
     public static IFinanceService create() {
-        final FinanceService service = new FinanceService();
-        initToken(service);
-        return service;
+        final String httpCrumb = getHttpCrumb();
+        return new FinanceService(httpCrumb);
     }
 
-    private static void initToken(final FinanceService service) {
+    private static String getHttpCrumb() {
         final BasicCookieStore cookieStore = new BasicCookieStore();
         clientContext.setCookieStore(cookieStore);
-        final String httpCrumb = getHttpCrumb("SPY");
+        final String httpCrumb = getHttpCrumbFromSource();
         if (httpCrumb == null || httpCrumb.isEmpty()) {
             handleNotExistingToken();
-        } else {
-            service.setHttpCrumb(httpCrumb);
         }
+        return httpCrumb;
     }
 
     private static void handleNotExistingToken() {
         System.out.println("Can not connect to Data Server");
     }
 
-    private static String getHttpCrumb(final String symbol) {
-        final String[] htmlSourceCode = getHtmlSourceCode(symbol).split("}");
+    private static String getHttpCrumbFromSource() {
+        final String[] htmlSourceCode = getHtmlSourceCode().split("}");
         final String crumb = Arrays.stream(htmlSourceCode)//
                 .filter(line -> line.contains(CRUMB_STORE))//
                 .findFirst()//
@@ -59,9 +58,9 @@ public class FinanceServiceFactory {
         return EMPTY;
     }
 
-    private static String getHtmlSourceCode(final String symbol) {
+    private static String getHtmlSourceCode() {
         String result = null;
-        final String symbolUri = String.format(QUOTE_URI, symbol, symbol);
+        final String symbolUri = String.format(QUOTE_URI, SYMBOL, SYMBOL);
         final HttpGet httpGet = new HttpGet(symbolUri);
         try {
             final HttpResponse httpResponse = httpClient.execute(httpGet, clientContext);
@@ -73,7 +72,7 @@ public class FinanceServiceFactory {
             }
             result = sb.toString();
             HttpClientUtils.closeQuietly(httpResponse);
-        } catch (Exception var6) {
+        } catch (Exception ex) {
             System.out.println("Can not connect to Server");
         }
         return result;

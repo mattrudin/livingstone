@@ -20,11 +20,12 @@ import java.util.List;
 import java.util.Objects;
 
 public class FinanceService implements IFinanceService {
-    private static String httpCrumb = "";
+    private final String httpCrumb;
     private static final String QUERY_URI = "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%s&period2=%s&interval=1d&events=history&crumb=%s";
     private final HttpClient httpClient = HttpClientBuilder.create().build();
 
-    public FinanceService() {
+    public FinanceService(final String httpCrumb) {
+        this.httpCrumb = httpCrumb;
     }
 
     @Override
@@ -38,8 +39,6 @@ public class FinanceService implements IFinanceService {
 
     @Override
     public Asset getPrice(String symbolName, LocalDate from) {
-        Objects.requireNonNull(symbolName);
-        Objects.requireNonNull(from);
         return getPrice(symbolName, from, LocalDate.now());
     }
 
@@ -95,9 +94,5 @@ public class FinanceService implements IFinanceService {
     private long getSeconds(final LocalDate date) {
         final LocalDateTime dateTime = date.atStartOfDay();
         return dateTime.toEpochSecond(ZoneOffset.UTC);
-    }
-
-    protected void setHttpCrumb(final String httpCrumb) {
-        FinanceService.httpCrumb = httpCrumb;
     }
 }

@@ -1,10 +1,11 @@
 package com.mattrudin.assets;
 
+import java.util.Collections;
 import java.util.List;
 
 public class Asset {
-    private String symbolName;
-    private List<TradeDay> tradingDays;
+    private final String symbolName;
+    private final List<TradeDay> tradingDays;
 
     public Asset(String symbolName, List<TradeDay> tradingDays) {
         this.symbolName = symbolName;
@@ -16,6 +17,6 @@ public class Asset {
     }
 
     public List<TradeDay> getTradingDays() {
-        return tradingDays;
+        return Collections.unmodifiableList(tradingDays);
     }
 }
