@@ -2,6 +2,8 @@ package com.mattrudin.service;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -23,6 +25,7 @@ public class FinanceServiceFactory {
     private static final String QUOTE_URI = "https://finance.yahoo.com/quote/%s/?p=%s";
     private static final String SYMBOL = "SPY";
     private static final HttpClient httpClient = HttpClientBuilder.create().build();
+    private static final Log log = LogFactory.getLog(FinanceServiceFactory.class);
 
     private FinanceServiceFactory() {
         // static
@@ -44,7 +47,7 @@ public class FinanceServiceFactory {
     }
 
     private static void handleNotExistingToken() {
-        System.out.println("Can not connect to Data Server");
+        log.error("Token does not exist.");
     }
 
     private static String getHttpCrumbFromSource() {
@@ -74,14 +77,14 @@ public class FinanceServiceFactory {
             }
             result = sb.toString();
             HttpClientUtils.closeQuietly(httpResponse);
-        } catch (Exception ex) {
-            System.out.println("Can not connect to Server");
+        } catch (final Exception exception) {
+            log.error("Could not connect to Server", exception);
         } finally {
             if (bufferedReader != null) {
                 try {
                     bufferedReader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (final IOException ioException) {
+                    log.error("Could not close BufferedReader", ioException);
                 }
             }
         }

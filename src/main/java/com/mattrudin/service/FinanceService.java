@@ -2,6 +2,8 @@ package com.mattrudin.service;
 
 import com.mattrudin.assets.Asset;
 import com.mattrudin.assets.TradeDay;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -23,6 +25,7 @@ public class FinanceService implements IFinanceService {
     private final String httpCrumb;
     private static final String QUERY_URI = "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%s&period2=%s&interval=1d&events=history&crumb=%s";
     private final HttpClient httpClient = HttpClientBuilder.create().build();
+    private static final Log log = LogFactory.getLog(FinanceService.class);
 
     public FinanceService(final String httpCrumb) {
         this.httpCrumb = httpCrumb;
@@ -69,6 +72,7 @@ public class FinanceService implements IFinanceService {
         final List<TradeDay> tradingDays = new ArrayList<>();
         HttpResponse httpResponse = null;
         BufferedReader bufferedReader = null;
+        log.info(String.format("Getting symbol %s", symbolName));
         try {
             httpResponse = httpClient.execute(httpGet);
             String line;
@@ -83,16 +87,16 @@ public class FinanceService implements IFinanceService {
                     }
                 }
             }
-        } catch (IOException ex) {
-            System.out.println("Error while writing: " + ex.getMessage());
+        } catch (IOException ioException) {
+            log.error("Error while writing", ioException);
         } finally {
             HttpClientUtils.closeQuietly(httpResponse);
             try {
                 if (bufferedReader != null) {
                     bufferedReader.close();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException ioException) {
+                log.error("Could not close BufferedReader", ioException);
             }
         }
         return tradingDays;
