@@ -1,6 +1,7 @@
 package com.mattrudin.service;
 
 import com.mattrudin.assets.Asset;
+import com.mattrudin.assets.TradeDay;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
@@ -18,7 +19,10 @@ import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
@@ -86,46 +90,46 @@ public class FinanceService implements IFinanceService {
     }
 
     @Override
-    public List<Asset> getPrice(String symbolName, final LocalDate from, final LocalDate until) {
+    public Asset getPrice(String symbolName, final LocalDate from, final LocalDate until) {
         Objects.requireNonNull(symbolName);
         Objects.requireNonNull(from);
         Objects.requireNonNull(until);
-        return query(symbolName, from, until);
+        final List<TradeDay> tradingDays = query(symbolName, from, until);
+        return new Asset(symbolName, tradingDays);
     }
 
     @Override
-    public List<Asset> getPrice(String symbolName, LocalDate from) {
+    public Asset getPrice(String symbolName, LocalDate from) {
         Objects.requireNonNull(symbolName);
         Objects.requireNonNull(from);
-        return query(symbolName, from, LocalDate.now());
+        return getPrice(symbolName, from, LocalDate.now());
     }
 
     @Override
-    public Map<String, List<Asset>> getPrices(List<String> symbolNames, final LocalDate from, final LocalDate until) {
+    public List<Asset> getPrices(List<String> symbolNames, final LocalDate from, final LocalDate until) {
         Objects.requireNonNull(symbolNames);
         Objects.requireNonNull(from);
         Objects.requireNonNull(until);
-        final Map<String, List<Asset>> symbolPrices = new HashMap<>();
+        final List<Asset> symbolPrices = new ArrayList<>();
         for (String symbolName : symbolNames) {
             if (symbolName != null) {
-                final List<Asset> symbolPrice = query(symbolName, from, until);
-                symbolPrices.put(symbolName, symbolPrice);
+                final List<TradeDay> tradingDays = query(symbolName, from, until);
+                final Asset asset = new Asset(symbolName, tradingDays);
+                symbolPrices.add(asset);
             }
         }
         return symbolPrices;
     }
 
     @Override
-    public Map<String, List<Asset>> getPrices(List<String> symbolNames, LocalDate from) {
-        Objects.requireNonNull(symbolNames);
-        Objects.requireNonNull(from);
+    public List<Asset> getPrices(List<String> symbolNames, LocalDate from) {
         return getPrices(symbolNames, from, LocalDate.now());
     }
 
-    private List<Asset> query(final String symbolName, final LocalDate from, final LocalDate until) {
+    private List<TradeDay> query(final String symbolName, final LocalDate from, final LocalDate until) {
         final String query = String.format(QUERY_URI, symbolName, getSeconds(from), getSeconds(until), httpCrumb);
         final HttpGet httpGet = new HttpGet(query);
-        final List<Asset> symbolPrices = new ArrayList<>();
+        final List<TradeDay> tradingDays = new ArrayList<>();
         HttpResponse httpResponse = null;
         try {
             httpResponse = httpClient.execute(httpGet);
@@ -136,8 +140,8 @@ public class FinanceService implements IFinanceService {
                 final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(httpEntity.getContent()));
                 while ((line = bufferedReader.readLine()) != null) {
                     if (!line.contains("Date") && !line.contains("N/A") && !line.contains("null")) {
-                        final Asset asset = new Asset(line);
-                        symbolPrices.add(asset);
+                        final TradeDay tradeDay = new TradeDay(line);
+                        tradingDays.add(tradeDay);
                     }
                 }
                 bufferedReader.close();
@@ -147,7 +151,7 @@ public class FinanceService implements IFinanceService {
         } finally {
             HttpClientUtils.closeQuietly(httpResponse);
         }
-        return symbolPrices;
+        return tradingDays;
     }
 
     private long getSeconds(final LocalDate date) {

@@ -14,7 +14,7 @@ public interface IFinanceService {
      * @param until
      * @return
      */
-    List<Asset> getPrice(final String symbolName, final LocalDate from, final LocalDate until);
+    Asset getPrice(final String symbolName, final LocalDate from, final LocalDate until);
 
     /**
      * Will return an Asset on daily basis to the given symbol. Starting from the given date till today.
@@ -22,7 +22,7 @@ public interface IFinanceService {
      * @param from
      * @return
      */
-    List<Asset> getPrice(final String symbolName, final LocalDate from);
+    Asset getPrice(final String symbolName, final LocalDate from);
 
     /**
      * Will return a list of Assets on daily basis to the given symbols.
@@ -31,7 +31,7 @@ public interface IFinanceService {
      * @param until
      * @return
      */
-    Map<String, List<Asset>> getPrices(final List<String> symbolNames, final LocalDate from, final LocalDate until);
+    List<Asset> getPrices(final List<String> symbolNames, final LocalDate from, final LocalDate until);
 
     /**
      * Will return a map of Assets on daily basis to the given symbols. Starting from the given date till today.
@@ -39,5 +39,5 @@ public interface IFinanceService {
      * @param from
      * @return
      */
-    Map<String, List<Asset>> getPrices(final List<String> symbolNames, final LocalDate from);
+    List<Asset> getPrices(final List<String> symbolNames, final LocalDate from);
 }
