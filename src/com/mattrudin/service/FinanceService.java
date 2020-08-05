@@ -1,5 +1,6 @@
-package com.mattrudin;
+package com.mattrudin.service;
 
+import com.mattrudin.assets.Asset;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
@@ -82,24 +83,24 @@ public class FinanceService implements IFinanceService {
     }
 
     @Override
-    public List<String> getPrice(String symbolName, final Date from, final Date until) {
+    public List<Asset> getPrice(String symbolName, final Date from, final Date until) {
         return query(symbolName, from, until);
     }
 
     @Override
-    public Map<String, List<String>> getPrices(List<String> symbolNames, final Date from, final Date until) {
-        final Map<String, List<String>> symbolPrices = new HashMap<>();
+    public Map<String, List<Asset>> getPrices(List<String> symbolNames, final Date from, final Date until) {
+        final Map<String, List<Asset>> symbolPrices = new HashMap<>();
         for (String symbolName : symbolNames) {
-            final List<String> symbolPrice = query(symbolName, from, until);
+            final List<Asset> symbolPrice = query(symbolName, from, until);
             symbolPrices.put(symbolName, symbolPrice);
         }
         return symbolPrices;
     }
 
-    private List<String> query(final String symbolName, final Date from, final Date until) {
+    private List<Asset> query(final String symbolName, final Date from, final Date until) {
         final String query = String.format(QUERY_URI, symbolName, getTimeFrame(from, until), getCurrentTime(), httpCrumb);
         final HttpGet httpGet = new HttpGet(query);
-        final List<String> symbolPrices = new ArrayList<>();
+        final List<Asset> symbolPrices = new ArrayList<>();
         HttpResponse httpResponse = null;
         try {
             httpResponse = httpClient.execute(httpGet);
@@ -110,7 +111,8 @@ public class FinanceService implements IFinanceService {
                 final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(httpEntity.getContent()));
                 while ((line = bufferedReader.readLine()) != null) {
                     if (!line.contains("Date") && !line.contains("N/A") && !line.contains("null")) {
-                        symbolPrices.add(line);
+                        final Asset asset = new Asset(line);
+                        symbolPrices.add(asset);
                     }
                 }
                 bufferedReader.close();

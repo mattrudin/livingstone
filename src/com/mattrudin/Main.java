@@ -1,5 +1,8 @@
 package com.mattrudin;
 
+import com.mattrudin.assets.Asset;
+import com.mattrudin.service.FinanceService;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,9 +12,9 @@ public class Main {
 
     public static void main(String[] args) {
         final FinanceService service = FinanceService.create();
-        final List<String> prices = service.getPrice("ASHR", null, null);
+        final List<Asset> prices = service.getPrice("ASHR", null, null);
         //
         final List<String> symbols = new ArrayList<>(Arrays.asList("ASHR", "GLD", "NUGT"));
-        final Map<String, List<String>> morePrices = service.getPrices(symbols, null, null);
+        final Map<String, List<Asset>> morePrices = service.getPrices(symbols, null, null);
     }
 }
