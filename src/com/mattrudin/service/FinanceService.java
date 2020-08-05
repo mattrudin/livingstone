@@ -68,25 +68,32 @@ public class FinanceService implements IFinanceService {
         final HttpGet httpGet = new HttpGet(query);
         final List<TradeDay> tradingDays = new ArrayList<>();
         HttpResponse httpResponse = null;
+        BufferedReader bufferedReader = null;
         try {
             httpResponse = httpClient.execute(httpGet);
             String line;
             // Writes each daily asset price
             if (httpResponse.getEntity() != null) {
                 final HttpEntity httpEntity = httpResponse.getEntity();
-                final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(httpEntity.getContent()));
+                bufferedReader = new BufferedReader(new InputStreamReader(httpEntity.getContent()));
                 while ((line = bufferedReader.readLine()) != null) {
                     if (!line.contains("Date") && !line.contains("N/A") && !line.contains("null")) {
                         final TradeDay tradeDay = new TradeDay(line);
                         tradingDays.add(tradeDay);
                     }
                 }
-                bufferedReader.close();
             }
         } catch (IOException ex) {
             System.out.println("Error while writing: " + ex.getMessage());
         } finally {
             HttpClientUtils.closeQuietly(httpResponse);
+            try {
+                if (bufferedReader != null) {
+                    bufferedReader.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return tradingDays;
     }

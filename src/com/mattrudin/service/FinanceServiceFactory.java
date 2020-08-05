@@ -11,6 +11,7 @@ import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 
@@ -62,9 +63,10 @@ public class FinanceServiceFactory {
         String result = null;
         final String symbolUri = String.format(QUOTE_URI, SYMBOL, SYMBOL);
         final HttpGet httpGet = new HttpGet(symbolUri);
+        BufferedReader bufferedReader = null;
         try {
             final HttpResponse httpResponse = httpClient.execute(httpGet, clientContext);
-            final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(httpResponse.getEntity().getContent()));
+            bufferedReader = new BufferedReader(new InputStreamReader(httpResponse.getEntity().getContent()));
             final StringBuilder sb = new StringBuilder();
             String line;
             while ((line = bufferedReader.readLine()) != null) {
@@ -74,6 +76,14 @@ public class FinanceServiceFactory {
             HttpClientUtils.closeQuietly(httpResponse);
         } catch (Exception ex) {
             System.out.println("Can not connect to Server");
+        } finally {
+            if (bufferedReader != null) {
+                try {
+                    bufferedReader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return result;
     }
