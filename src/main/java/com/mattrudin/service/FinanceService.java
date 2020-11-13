@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -27,6 +28,7 @@ public class FinanceService implements IFinanceService {
       "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%s&period2=%s&interval=1d&events=history&crumb=%s";
   private final HttpClient httpClient = HttpClientBuilder.create().build();
   private static final Log log = LogFactory.getLog(FinanceService.class);
+  private final LocalDate tomorrow = LocalDate.now().plus(1, ChronoUnit.DAYS);
 
   public FinanceService(final String httpCrumb) {
     this.httpCrumb = httpCrumb;
@@ -43,7 +45,7 @@ public class FinanceService implements IFinanceService {
 
   @Override
   public Asset getPrice(String symbolName, LocalDate from) {
-    return getPrice(symbolName, from, LocalDate.now());
+    return getPrice(symbolName, from, tomorrow);
   }
 
   @Override
@@ -65,7 +67,7 @@ public class FinanceService implements IFinanceService {
 
   @Override
   public List<Asset> getPrices(List<String> symbolNames, LocalDate from) {
-    return getPrices(symbolNames, from, LocalDate.now());
+    return getPrices(symbolNames, from, tomorrow);
   }
 
   private List<TradeDay> query(
