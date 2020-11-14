@@ -87,7 +87,7 @@ public class FinanceService implements IFinanceService {
         final HttpEntity httpEntity = httpResponse.getEntity();
         bufferedReader = new BufferedReader(new InputStreamReader(httpEntity.getContent()));
         while ((line = bufferedReader.readLine()) != null) {
-          if (!line.contains("Date") && !line.contains("N/A") && !line.contains("null")) {
+          if (isValid(line)) {
             final TradeDay tradeDay = new TradeDay(line);
             tradingDays.add(tradeDay);
           }
@@ -106,6 +106,13 @@ public class FinanceService implements IFinanceService {
       }
     }
     return tradingDays;
+  }
+
+  private boolean isValid(final String line) {
+    return !line.contains("Date")
+        && !line.contains("N/A")
+        && !line.contains("null")
+        && !line.contains("404 Not Found");
   }
 
   private long getSeconds(final LocalDate date) {
