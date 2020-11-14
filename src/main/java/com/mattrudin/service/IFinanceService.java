@@ -1,6 +1,7 @@
 package com.mattrudin.service;
 
 import com.mattrudin.assets.Asset;
+import pl.zankowski.iextrading4j.api.stocks.Earnings;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -46,4 +47,20 @@ public interface IFinanceService {
    * @return
    */
   List<Asset> getPrices(final List<String> symbolNames, final LocalDate from);
+
+  /**
+   * Will return an Earnings object of the given symbol.
+   *
+   * @param symbolName
+   * @return
+   */
+  Earnings getEarnings(final String symbolName);
+
+  /**
+   * Will return the last earning date of the given symbol
+   *
+   * @param symbolName
+   * @return
+   */
+  LocalDate getLastEarningDate(final String symbolName);
 }

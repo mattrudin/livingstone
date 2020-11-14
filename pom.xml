@@ -46,5 +46,10 @@
             <artifactId>httpcore</artifactId>
             <version>4.4.13</version>
         </dependency>
+        <dependency>
+            <groupId>pl.zankowski</groupId>
+            <artifactId>iextrading4j-all</artifactId>
+            <version>3.3.4</version>
+        </dependency>
     </dependencies>
 </project>

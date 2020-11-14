@@ -10,6 +10,13 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.impl.client.HttpClientBuilder;
+import pl.zankowski.iextrading4j.api.stocks.Earning;
+import pl.zankowski.iextrading4j.api.stocks.Earnings;
+import pl.zankowski.iextrading4j.client.IEXCloudClient;
+import pl.zankowski.iextrading4j.client.IEXCloudTokenBuilder;
+import pl.zankowski.iextrading4j.client.IEXTradingApiVersion;
+import pl.zankowski.iextrading4j.client.IEXTradingClient;
+import pl.zankowski.iextrading4j.client.rest.request.stocks.EarningsRequestBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,12 +33,18 @@ public class FinanceService implements IFinanceService {
   private final String httpCrumb;
   private static final String QUERY_URI =
       "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%s&period2=%s&interval=1d&events=history&crumb=%s";
+  private static final String PUBLIC_KEY = "pk_36c2d705c37a4381a9caad94fb74f8f5";
   private final HttpClient httpClient = HttpClientBuilder.create().build();
   private static final Log log = LogFactory.getLog(FinanceService.class);
   private final LocalDate tomorrow = LocalDate.now().plus(1, ChronoUnit.DAYS);
+  private final IEXCloudClient cloudClient;
 
   public FinanceService(final String httpCrumb) {
     this.httpCrumb = httpCrumb;
+    cloudClient =
+        IEXTradingClient.create(
+            IEXTradingApiVersion.IEX_CLOUD_V1,
+            new IEXCloudTokenBuilder().withPublishableToken(PUBLIC_KEY).build());
   }
 
   @Override
@@ -68,6 +81,20 @@ public class FinanceService implements IFinanceService {
   @Override
   public List<Asset> getPrices(List<String> symbolNames, LocalDate from) {
     return getPrices(symbolNames, from, tomorrow);
+  }
+
+  @Override
+  public Earnings getEarnings(String symbolName) {
+    Objects.requireNonNull(symbolName);
+    return cloudClient.executeRequest(new EarningsRequestBuilder().withSymbol(symbolName).build());
+  }
+
+  @Override
+  public LocalDate getLastEarningDate(String symbolName) {
+    final Earnings asset = getEarnings(symbolName);
+    final List<Earning> earnings = asset.getEarnings();
+    // The free IEX Account offers only the last earning date, hence we have only one Earning-Object
+    return earnings.get(0).getEPSReportDate();
   }
 
   private List<TradeDay> query(
